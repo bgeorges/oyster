@@ -73,3 +73,5 @@ typings/
 # Serverless directories
 .serverless
 
+# Temp directory generated from nodeshift
+tmp/
