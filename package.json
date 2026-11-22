@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "PORT=8080 node ./bin/www"
+    "start": "PORT=8080 node ./bin/www",
+    "test": "node --test"
   },
   "dependencies": {
     "cookie-parser": "~1.4.3",
