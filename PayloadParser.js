@@ -13,6 +13,9 @@ function hex2Bytes(val) {
         val = val.substring(2); //get rid of starting '0x'
     }
 
+    if (val.length === 0 || val.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(val)) {
+        throw new Error('Invalid hex payload: "' + val + '"');
+    }
 
     var numBytes = val.length / 2;
     var bytes = [];
@@ -44,13 +47,16 @@ function parseLittleEndianInt16Bits(buffer, offset, bitOffset, bitLength) {
     return temp & mask;
 }
 
+function assertFrameLength(buffer, minLength) {
+    if (!buffer || buffer.length < minLength) {
+        throw new Error('Frame too short: expected at least ' + minLength +
+            ' bytes, got ' + (buffer ? buffer.length : 0));
+    }
+}
+
 //e.g. 10b67dcc0006efda3d9816c2
 function parseSigFox(data) {
     var buffer = hex2Bytes(data);
-
-    if (!buffer) {
-        return null;
-    }
 
     var recordType = buffer[0] & 0x0f;
 
@@ -70,6 +76,8 @@ function parseSigFox(data) {
 }
 
 function parsePositionalData(buffer) {
+    assertFrameLength(buffer, 12);
+
     var flags = buffer[0] & 0xF0;
     var inTrip = (flags & 0x10) > 0;
     var lastFixFailed = (flags & 0x20) > 0;
@@ -93,6 +101,8 @@ function parsePositionalData(buffer) {
 }
 
 function parseDownlinkAck(buffer) {
+    assertFrameLength(buffer, 12);
+
     var flags = buffer[0] & 0xF0;
     var downlinkAccepted = (flags & 0x10) > 0;
 
@@ -101,7 +111,7 @@ function parseDownlinkAck(buffer) {
 
     var data = [];
     for (var i = 0; i < 8; i++) {
-        data.push(i + 4);
+        data.push(buffer[i + 4]);
     }
 
     return {
@@ -113,6 +123,8 @@ function parseDownlinkAck(buffer) {
 }
 
 function parseDeviceStats(buffer) {
+    assertFrameLength(buffer, 12);
+
     var uptimeWeeks = parseLittleEndianInt16Bits(buffer, 0, 4, 9/*bits*/);
     var txCountRaw = parseLittleEndianInt16Bits(buffer, 1, 5, 11 /*bits*/);
     var rxCountRaw = buffer[3];
@@ -140,4 +152,3 @@ function parseDeviceStats(buffer) {
 }
 
 module.exports.parseSigFox = parseSigFox;
-

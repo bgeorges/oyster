@@ -10,8 +10,16 @@ router.get('/', function(req, res, next) {
 /* Parse payload data */
 router.get("/:data", function (req, res, next) {
     var data = req.params.data;
-    var results = parser.parseSigFox(data);
-    console.log("Lat: %d, Lon: %d",results.Latitude, results.Longitude);
+    var results;
+    try {
+        results = parser.parseSigFox(data);
+    } catch (err) {
+        return res.status(400).json({ error: err.message });
+    }
+    if (!results) {
+        return res.status(400).json({ error: 'Unknown or unsupported record type' });
+    }
+    console.log("Lat: %d, Lon: %d", results.Latitude, results.Longitude);
     res.json(results);
 });
 
